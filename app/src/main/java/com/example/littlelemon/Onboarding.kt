@@ -63,11 +63,11 @@ fun Onboarding(navController: NavHostController) {
         // Logo
         Image(
             painter = painterResource(id = R.drawable.logo),
-            contentDescription = null,
+            contentDescription = "Logo",
             modifier = Modifier.height(45.dp)
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
         // Green header bar (full width)
         Box(
@@ -94,6 +94,7 @@ fun Onboarding(navController: NavHostController) {
 
             Text(
                 text = "Personal information",
+                color = Color(0xFF495E57),
                 style = MaterialTheme.typography.titleMedium
             )
 
