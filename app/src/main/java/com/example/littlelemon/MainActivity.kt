@@ -12,18 +12,22 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.view.WindowCompat
+import androidx.navigation.compose.rememberNavController
 import com.example.littlelemon.ui.theme.LittleLemonTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            Surface(
+            val navController = rememberNavController()
+            MyNavigation(navController)
+
+          /*  Surface(
                 modifier = Modifier.fillMaxSize(),
             ) {
                 Onboarding()
             }
-
+*/
         }
     }
 }

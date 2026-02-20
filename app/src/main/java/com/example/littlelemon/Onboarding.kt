@@ -1,6 +1,7 @@
 package com.example.littlelemon
 
 import ads_mobile_sdk.h5
+import android.content.Context
 import android.text.style.BackgroundColorSpan
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -31,17 +32,24 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Onboarding() {
+fun Onboarding(navController: NavHostController) {
+
+    val context = LocalContext.current
+    val sharedPref = context.getSharedPreferences("LittleLemon", Context.MODE_PRIVATE)
 
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
+    var message by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -140,7 +148,23 @@ fun Onboarding() {
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = { },
+                onClick = {
+                    if (firstName.isBlank() || lastName.isBlank() || email.isBlank()) {
+                        message = "Registration unsuccessful. Please enter all data."
+                    } else {
+                        sharedPref.edit()
+                            .putString("firstName", firstName)
+                            .putString("lastName", lastName)
+                            .putString("email", email)
+                            .apply()
+
+                        message = "Registration successful!"
+
+                        navController.navigate(Destinations.Home.route) {
+                            popUpTo(Destinations.Onboarding.route) { inclusive = true }
+                        }
+                    }
+                },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFFF4CE14)
                 ),
@@ -152,7 +176,7 @@ fun Onboarding() {
             ) {
                 Text("Register", color = Color.Black)
             }
-
+            Text(message)
         }
     }
 }
@@ -160,5 +184,6 @@ fun Onboarding() {
 @Preview(showBackground = true)
 @Composable
 fun OnboardingPreview() {
-    Onboarding()
+    val navController = rememberNavController()
+    Onboarding(navController)
 }
