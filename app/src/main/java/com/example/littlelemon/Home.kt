@@ -64,6 +64,7 @@ fun Home(navController: NavHostController, database: AppDatabase) {
         }
         item {
             CategorySection(
+                selectedCategory = selectedCategory,
                 onCategorySelected = { selectedCategory = it }
             )
         }
@@ -181,8 +182,9 @@ fun HeroSection(searchPhrase: String, onSearchChanged: (String) -> Unit)
 }
 
 @Composable
-fun CategorySection(onCategorySelected: (String) -> Unit) {
 
+fun CategorySection(selectedCategory: String, onCategorySelected: (String) -> Unit)
+{
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -201,29 +203,43 @@ fun CategorySection(onCategorySelected: (String) -> Unit) {
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
-                CategoryButton("All") {
-                    onCategorySelected("")
-                }
+                CategoryButton(
+                    text = "All",
+                    isSelected = selectedCategory == "",
+                    onClick = { onCategorySelected("") }
+                )
             }
+
             item {
-                CategoryButton("Starters") {
-                    onCategorySelected("starters")
-                }
+                CategoryButton(
+                    text = "Starters",
+                    isSelected = selectedCategory == "starters",
+                    onClick = { onCategorySelected("starters") }
+                )
             }
+
             item {
-                CategoryButton("Mains") {
-                    onCategorySelected("mains")
-                }
+                CategoryButton(
+                    text = "Mains",
+                    isSelected = selectedCategory == "mains",
+                    onClick = { onCategorySelected("mains") }
+                )
             }
+
             item {
-                CategoryButton("Desserts") {
-                    onCategorySelected("desserts")
-                }
+                CategoryButton(
+                    text = "Desserts",
+                    isSelected = selectedCategory == "desserts",
+                    onClick = { onCategorySelected("desserts") }
+                )
             }
+
             item {
-                CategoryButton("Drinks") {
-                    onCategorySelected("drinks")
-                }
+                CategoryButton(
+                    text = "Drinks",
+                    isSelected = selectedCategory == "drinks",
+                    onClick = { onCategorySelected("drinks") }
+                )
             }
         }
     }
@@ -231,14 +247,18 @@ fun CategorySection(onCategorySelected: (String) -> Unit) {
     Divider()
 }
 @Composable
-fun CategoryButton(text: String, onClick: () -> Unit) {
+fun CategoryButton(text: String, isSelected: Boolean, onClick: () -> Unit) {
 
     Button(
         onClick = onClick,
         shape = RoundedCornerShape(20.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xFFEDEFEE),
+            containerColor =
+            if (isSelected) Color(0xFFF4CE14)
+            else Color(0xFFEDEFEE),
+
             contentColor = Color(0xFF495E57)
+
         )
     ) {
 
