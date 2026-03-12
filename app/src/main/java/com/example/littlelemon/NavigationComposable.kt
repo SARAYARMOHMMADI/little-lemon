@@ -3,14 +3,13 @@ package com.example.littlelemon
 import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
-import androidx.navigation.NavHost
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.rememberNavController
+
 
 @Composable
-fun MyNavigation(navController: NavHostController) {
+fun MyNavigation(navController: NavHostController, database: AppDatabase) {
 
     val context = LocalContext.current
     val sharedPref = context.getSharedPreferences("LittleLemon", Context.MODE_PRIVATE)
@@ -30,7 +29,7 @@ fun MyNavigation(navController: NavHostController) {
         }
 
         composable(Destinations.Home.route) {
-            Home(navController)
+            Home(navController, database)
         }
 
         composable(Destinations.Profile.route) {
