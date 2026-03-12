@@ -12,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.navigation.NavHostController
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
 import com.bumptech.glide.integration.compose.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -83,14 +84,17 @@ fun Header(navController: NavHostController) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+        verticalAlignment = Alignment.CenterVertically
     ) {
+
+        Spacer(modifier = Modifier.weight(1f))
 
         Image(
             painter = painterResource(id = R.drawable.logo),
             contentDescription = "Logo"
         )
 
+        Spacer(modifier = Modifier.weight(1f))
         Image(
             painter = painterResource(id = R.drawable.profile),
             contentDescription = "Profile",
@@ -283,7 +287,10 @@ fun MenuItem(menuItem: MenuItemRoom) {
             modifier = Modifier.weight(1f)
         ) {
 
-            Text(menuItem.title)
+            Text(
+                text = menuItem.title,
+                fontWeight = FontWeight.Bold
+            )
 
             Spacer(modifier = Modifier.height(4.dp))
 
