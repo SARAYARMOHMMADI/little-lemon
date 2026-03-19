@@ -14,4 +14,8 @@ interface Destinations {
     object Profile : Destinations {
         override val route = "Profile"
     }
+
+    object Detail {
+        const val route = "detail/{itemId}"
+    }
 }

@@ -22,10 +22,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 
 
 @Composable
-fun Home(navController: NavHostController, database: AppDatabase) {
+fun Home(navController: NavHostController, database: AppDatabase,  cartViewModel: CartViewModel) {
 
     val databaseMenuItems by database
         .menuItemDao()
@@ -71,7 +72,8 @@ fun Home(navController: NavHostController, database: AppDatabase) {
         }
         items(categoryFiltered) { item ->
 
-            MenuItem(item)
+            MenuItem(item, navController)
+
         }
     }
 }
@@ -275,13 +277,16 @@ fun CategoryButton(text: String, isSelected: Boolean, onClick: () -> Unit) {
 
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
-fun MenuItem(menuItem: MenuItemRoom) {
+fun MenuItem(menuItem: MenuItemRoom, navController: NavController) {
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable {
+                navController.navigate("detail/${menuItem.id}")
+            }
             .padding(16.dp)
-    ) {
+    ){
 
         Column(
             modifier = Modifier.weight(1f)
