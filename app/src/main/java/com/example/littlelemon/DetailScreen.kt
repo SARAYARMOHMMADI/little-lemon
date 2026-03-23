@@ -60,30 +60,34 @@ fun DetailScreen(navController: NavController, id: Int, database: AppDatabase,ca
         var selected by remember { mutableStateOf("") }
         var count by remember { mutableStateOf(1) }
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-        ) {
+        Box(modifier = Modifier.fillMaxSize()) {
 
-            DetailHeader(navController, cartCount = cartViewModel.cartItems.size )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(bottom = 100.dp)
+            ) {
+                DetailHeader(navController, cartCount = cartViewModel.getTotalCount())
+                DetailImage(imageUrl)
+                DetailContent(menuItem = menuItem)
+            }
 
-            DetailImage(imageUrl)
-
-            DetailContent(
-                menuItem = menuItem,
-                selected = selected,
-                onSelect = { selected = it },
+            DetailBottomBar(
+                price = menuItem.price,
                 count = count,
                 onIncrease = { count++ },
                 onDecrease = { if (count > 1) count-- },
                 onAddToCart = {
-                    cartViewModel.addToCart(menuItem)
-                }
+                    cartViewModel.addToCart(menuItem, count)
+                    count = 1
+                },
+                modifier = Modifier.align(Alignment.BottomCenter)
             )
         }
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -145,12 +149,6 @@ fun DetailImage(imageUrl: String) {
 @Composable
 fun DetailContent(
     menuItem: MenuItemRoom,
-    selected: String,
-    onSelect: (String) -> Unit,
-    count: Int,
-    onIncrease: () -> Unit,
-    onDecrease: () -> Unit,
-    onAddToCart: () -> Unit
 ) {
 
     Column(modifier = Modifier.padding(16.dp)) {
@@ -168,37 +166,27 @@ fun DetailContent(
             color = Color.Gray
         )
         Spacer(modifier = Modifier.height(16.dp))
+ }
+}
 
-        Text("Add", style = MaterialTheme.typography.titleMedium)
 
-        Spacer(modifier = Modifier.height(16.dp))
+@Composable
+fun DetailBottomBar(
+    price: String,
+    count: Int,
+    onIncrease: () -> Unit,
+    onDecrease: () -> Unit,
+    onAddToCart: () -> Unit,
+    modifier: Modifier = Modifier
+) {
 
-        listOf("Feta", "Parmesan", "Dressing").forEach { itemName ->
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(Color.White)
+            .padding(16.dp)
+    ) {
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onSelect(itemName) }
-                    .padding(vertical = 4.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-
-                Text(itemName)
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-
-                    Text("$1.00")
-
-                    RadioButton(
-                        selected = selected == itemName,
-                        onClick = { onSelect(itemName)
-                        }
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -206,33 +194,41 @@ fun DetailContent(
             verticalAlignment = Alignment.CenterVertically
         ) {
 
-            Button(onClick = onDecrease , colors = buttonColors(containerColor = Color(0xFF495E57)))
-            {
+            Button(
+                onClick = onDecrease,
+                colors = buttonColors(containerColor = Color(0xFF495E57))
+            ) {
                 Text("-")
             }
 
             Text(
                 text = count.toString(),
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier.padding(horizontal = 16.dp)
             )
 
-            Button(onClick = onIncrease, colors = buttonColors(containerColor = Color(0xFF495E57)))
-            {
+            Button(
+                onClick = onIncrease,
+                colors = buttonColors(containerColor = Color(0xFF495E57))
+            ) {
                 Text("+")
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
+
 
         Button(
-            onClick = { onAddToCart() },
+            onClick = onAddToCart,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp),
             shape = RoundedCornerShape(16.dp),
             colors = buttonColors(containerColor = Color(0xFFF4CE14))
         ) {
-            Text("Add for $${menuItem.price}", color = Color.Black)
+            val totalPrice = price.toDouble() * count
+            Text("Add for $${"%.2f".format(totalPrice)}", color = Color.Black)
+        }
     }
- }
 }
+
+

@@ -1,5 +1,6 @@
 package com.example.littlelemon
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -26,102 +27,213 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material3.*
+import androidx.compose.ui.res.painterResource
+import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.bumptech.glide.integration.compose.GlideImage
+
 
 @Composable
 fun CartScreen(navController: NavController, cartViewModel: CartViewModel) {
 
-    val items = cartViewModel.cartItems
-    val subtotal = cartViewModel.getSubtotal()
-    val delivery = 2.0
-    val service = 1.0
-    val total = subtotal + delivery + service
-
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
-            .padding(16.dp)
+            .background(Color.White)
     ) {
 
-        // 🔙 Header
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        CartHeader(navController, cartViewModel.getTotalCount())
+
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
         ) {
-
-            IconButton(onClick = { navController.popBackStack() }) {
-                Icon(Icons.Default.ArrowBack, contentDescription = null)
-            }
-
-            Text("Order Summary", style = MaterialTheme.typography.titleLarge)
-
-            Spacer(modifier = Modifier.width(24.dp))
+            CartContent(cartViewModel)
         }
+
+        CheckoutButton()
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CartHeader(navController: NavController,  cartCount: Int) {
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.White)
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+
+        IconButton(onClick = {
+            navController.popBackStack()
+        }) {
+            Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color(0xFF495E57))
+        }
+
+        Image(
+            painter = painterResource(id = R.drawable.logo),
+            contentDescription = "Logo",
+            modifier = Modifier.height(40.dp)
+        )
+
+        IconButton(onClick = {
+            navController.navigate("cart")
+        }) {
+            BadgedBox(
+                badge = {
+                    if (cartCount > 0) {
+                        Badge {
+                            Text(cartCount.toString())
+                        }
+                    }
+                }
+            ){
+                Icon(Icons.Default.ShoppingCart, contentDescription = null, tint = Color(0xFF495E57))
+            }
+        }
+    }
+}
+
+@Composable
+fun CartContent(cartViewModel: CartViewModel) {
+
+    Column(modifier = Modifier.padding(16.dp)) {
+
+        Text("Order Summary", style = MaterialTheme.typography.titleMedium)
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // 🧾 Items
-        Text("Items", style = MaterialTheme.typography.titleMedium)
+        CartItemsList(cartViewModel)
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Divider(modifier = Modifier.padding(vertical = 16.dp))
 
-        items.forEach { item ->
+        PriceSummary(cartViewModel)
+    }
+}
+
+@OptIn(ExperimentalGlideComposeApi::class)
+@Composable
+fun CartItemsList(cartViewModel: CartViewModel) {
+
+    Column {
+
+        cartViewModel.cartItems.forEach { cartItem ->
+
+            val imageUrl = cartItem.item.image
+                .replace("github.com", "raw.githubusercontent.com")
+                .replace("/blob/", "/")
+                .replace("?raw=true", "")
 
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+                verticalAlignment = Alignment.CenterVertically
             ) {
 
-                Text("1 x ${item.title}")
+                GlideImage(
+                    model = imageUrl,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(70.dp)
+                        .background(Color.LightGray, RoundedCornerShape(12.dp))
+                )
 
-                Text("$${item.price}")
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(cartItem.item.title)
+                    Text("$${cartItem.item.price}", color = Color.Gray)
+                }
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+
+                    IconButton(onClick = {
+                        cartViewModel.decrease(cartItem)
+                    }) {
+                        Text("-")
+                    }
+
+                    Text(cartItem.quantity.toString())
+
+                    IconButton(onClick = {
+                        cartViewModel.increase(cartItem)
+                    }) {
+                        Text("+")
+                    }
+                }
+
+                // 🔥 حذف
+                IconButton(onClick = {
+                    cartViewModel.remove(cartItem)
+                }) {
+                    Icon(Icons.Default.Delete, contentDescription = null)
+                }
             }
         }
+    }
+}
 
-        Spacer(modifier = Modifier.height(16.dp))
+@Composable
+fun PriceSummary(cartViewModel: CartViewModel) {
 
-        Divider()
+    val subtotal = cartViewModel.getSubtotal()
+    val delivery = 10.0
+    val service = 2.0
+    val total = subtotal + delivery + service
 
-        Spacer(modifier = Modifier.height(16.dp))
+    Column {
 
-        // 💰 Summary
-        Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
-            Text("Subtotal")
-            Text("$${"%.2f".format(subtotal)}")
-        }
+        RowPrice("Subtotal", subtotal)
+        RowPrice("Delivery", delivery)
+        RowPrice("Service", service)
 
-        Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
-            Text("Delivery")
-            Text("$${"%.2f".format(delivery)}")
-        }
+        Divider(modifier = Modifier.padding(vertical = 8.dp))
 
-        Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
-            Text("Service")
-            Text("$${"%.2f".format(service)}")
-        }
+        RowPrice("Total", total, true)
+    }
+}
 
-        Spacer(modifier = Modifier.height(8.dp))
+@Composable
+fun RowPrice(label: String, value: Double, bold: Boolean = false) {
 
-        Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
-            Text("Total", style = MaterialTheme.typography.titleMedium)
-            Text("$${"%.2f".format(total)}", color = Color(0xFF495E57))
-        }
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Text(label)
 
-        // 🟡 Checkout Button
-        Button(
-            onClick = { },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF4CE14))
-        ) {
-            Text("Checkout", color = Color.Black)
-        }
+        Text(
+            "$%.2f".format(value),
+            fontWeight = if (bold) androidx.compose.ui.text.font.FontWeight.Bold
+            else androidx.compose.ui.text.font.FontWeight.Normal
+        )
+    }
+}
+
+@Composable
+fun CheckoutButton() {
+
+    Button(
+        onClick = { },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+            .height(50.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF4CE14))
+    ) {
+        Text("Checkout", color = Color.Black)
     }
 }

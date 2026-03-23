@@ -1,13 +1,17 @@
 package com.example.littlelemon
 
+import android.content.Context
+import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.navigation.NavHostController
@@ -18,11 +22,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
 
 
 @Composable
@@ -38,6 +44,10 @@ fun Home(navController: NavHostController, database: AppDatabase,  cartViewModel
     var searchPhrase by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("") }
 
+    val context = LocalContext.current
+    val sharedPref = context.getSharedPreferences("LittleLemon", Context.MODE_PRIVATE)
+    val uriString = sharedPref.getString("profileImage", null)
+    val uri = uriString?.let { Uri.parse(it) }
 
     val filteredItems = if (searchPhrase.isNotBlank()) {
         menuItems.filter {
@@ -56,7 +66,7 @@ fun Home(navController: NavHostController, database: AppDatabase,  cartViewModel
 
     LazyColumn {
         item {
-            Header(navController)
+            Header(navController, cartViewModel, uri)
         }
         item {
             HeroSection(
@@ -78,10 +88,12 @@ fun Home(navController: NavHostController, database: AppDatabase,  cartViewModel
     }
 }
 
-
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Header(navController: NavHostController) {
+fun Header(navController: NavHostController, cartViewModel: CartViewModel, profileUri: Uri?)
+{
+    val cartCount = cartViewModel.getTotalCount()
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -89,23 +101,63 @@ fun Header(navController: NavHostController) {
         verticalAlignment = Alignment.CenterVertically
     ) {
 
-        Spacer(modifier = Modifier.weight(1f))
+        if (profileUri != null) {
+            Image(
+                painter = rememberAsyncImagePainter(profileUri),
+                contentDescription = "Profile",
+                modifier = Modifier
+                    .size(40.dp)
+                    .clickable {
+                        navController.navigate(Destinations.Profile.route)
+                    }
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            Image(
+                painter = painterResource(id = R.drawable.profile),
+                contentDescription = "Profile",
+                modifier = Modifier
+                    .size(40.dp)
+                    .clickable {
+                        navController.navigate(Destinations.Profile.route)
+                    }
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop
+            )
+        }
 
-        Image(
-            painter = painterResource(id = R.drawable.logo),
-            contentDescription = "Logo"
-        )
+        Box(
+            modifier = Modifier.weight(1f),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.logo),
+                contentDescription = "Logo"
+            )
+        }
 
-        Spacer(modifier = Modifier.weight(1f))
-        Image(
-            painter = painterResource(id = R.drawable.profile),
-            contentDescription = "Profile",
-            modifier = Modifier
-                .size(40.dp)
-                .clickable {
-                    navController.navigate(Destinations.Profile.route)
+        IconButton(
+            onClick = {
+                navController.navigate("cart")
+            }
+        ) {
+            BadgedBox(
+                badge = {
+                    if (cartCount > 0) {
+                        Badge {
+                            Text(cartCount.toString())
+                        }
+                    }
                 }
-        )
+            ) {
+                Icon(
+                    Icons.Default.ShoppingCart,
+                    contentDescription = "Cart",
+                    tint = Color(0xFF495E57)
+                )
+            }
+        }
     }
 }
 
