@@ -35,4 +35,22 @@ interface MenuItemDao {
 @Database(entities = [MenuItemRoom::class], version = 2)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun menuItemDao(): MenuItemDao
+
+    companion object {
+        @Volatile
+        private var INSTANCE: AppDatabase? = null
+
+        fun getInstance(context: android.content.Context): AppDatabase {
+            return INSTANCE ?: synchronized(this) {
+                val instance = androidx.room.Room.databaseBuilder(
+                    context.applicationContext,
+                    AppDatabase::class.java,
+                    "littlelemon-database"
+                ).build()
+                INSTANCE = instance
+                instance
+            }
+        }
+    }
 }
+

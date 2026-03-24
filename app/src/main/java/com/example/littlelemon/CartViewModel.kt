@@ -1,11 +1,14 @@
 package com.example.littlelemon
 
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 
 class CartViewModel : ViewModel() {
 
+    var isCutlerySelected by mutableStateOf(true)
     var cartItems = mutableStateListOf<CartItem>()
         private set
 
@@ -47,5 +50,9 @@ class CartViewModel : ViewModel() {
 
     fun getTotalCount(): Int {
         return cartItems.sumOf { it.quantity.value }
+    }
+
+    fun clearCart() {
+        cartItems.clear()
     }
 }

@@ -49,7 +49,9 @@ fun MyNavigation(navController: NavHostController, database: AppDatabase) {
         }
 
         composable("cart") {
-            CartScreen(navController, cartViewModel)
+            CartScreen(navController,database, cartViewModel)
         }
+
+
     }
 }

@@ -18,4 +18,6 @@ interface Destinations {
     object Detail {
         const val route = "detail/{itemId}"
     }
+
+
 }
