@@ -287,8 +287,8 @@ fun Onboarding(navController: NavHostController) {
 
                                 message = "Registration successful!"
 
-                                navController.navigate(Destinations.Home.route) {
-                                    popUpTo(Destinations.Onboarding.route) { inclusive = true }
+                                navController.navigate(Destinations.Home) {
+                                    popUpTo(Destinations.Onboarding) { inclusive = true }
                                 }
                             }
                         },

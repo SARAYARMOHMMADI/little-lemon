@@ -264,8 +264,8 @@ fun Profile (navController: NavHostController) {
                         Button(
                             onClick = {
                                 viewModel.clearProfile()
-                                navController.navigate(Destinations.Onboarding.route) {
-                                    popUpTo(Destinations.Home.route) { inclusive = true }
+                                navController.navigate(Destinations.Onboarding) {
+                                    popUpTo(Destinations.Home) { inclusive = true }
                                 }
                             },
                             modifier = Modifier

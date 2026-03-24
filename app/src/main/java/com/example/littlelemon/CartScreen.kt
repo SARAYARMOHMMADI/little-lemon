@@ -87,6 +87,7 @@ fun CartScreen(navController: NavController,database: AppDatabase, cartViewModel
 
     if (showDialog) {
         OrderSuccessDialog(
+            navController,
             cartViewModel,
             onDismiss = { showDialog = false }
         )
@@ -518,14 +519,14 @@ fun RowPrice(label: String, value: Double) {
 }
 
 @Composable
-fun OrderSuccessDialog(cartViewModel: CartViewModel, onDismiss: () -> Unit) {
+fun OrderSuccessDialog(navController: NavController, cartViewModel: CartViewModel, onDismiss: () -> Unit) {
 
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
             Button(
                 onClick = {
-                    cartViewModel.clearCart()   // 🔥 خالی کردن سبد
+                    navController.navigate(Destinations.Track)
                     onDismiss()
                 },
                 colors = ButtonDefaults.buttonColors(

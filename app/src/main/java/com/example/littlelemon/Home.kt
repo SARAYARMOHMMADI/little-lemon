@@ -108,7 +108,7 @@ fun Header(navController: NavHostController, cartViewModel: CartViewModel, profi
                 modifier = Modifier
                     .size(40.dp)
                     .clickable {
-                        navController.navigate(Destinations.Profile.route)
+                        navController.navigate(Destinations.Profile)
                     }
                     .clip(CircleShape),
                 contentScale = ContentScale.Crop
@@ -120,7 +120,7 @@ fun Header(navController: NavHostController, cartViewModel: CartViewModel, profi
                 modifier = Modifier
                     .size(40.dp)
                     .clickable {
-                        navController.navigate(Destinations.Profile.route)
+                        navController.navigate(Destinations.Profile)
                     }
                     .clip(CircleShape),
                 contentScale = ContentScale.Crop

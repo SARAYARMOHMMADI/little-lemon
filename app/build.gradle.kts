@@ -82,7 +82,7 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
     implementation("io.coil-kt:coil-compose:2.4.0")
     implementation("com.github.yalantis:ucrop:2.2.8")
-
+    implementation ("com.google.android.gms:play-services-maps:18.2.0")
 
 
     configurations.all {

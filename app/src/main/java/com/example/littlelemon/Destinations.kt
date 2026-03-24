@@ -1,23 +1,16 @@
 package com.example.littlelemon
 
-interface Destinations {
-    val route: String
+object Destinations {
+    const val Onboarding = "onboarding"
+    const val Home = "home"
+    const val Profile = "profile"
+    const val Cart = "cart"
+    const val Track = "track"
 
-    object Onboarding : Destinations {
-        override val route = "Onboarding"
+    // با پارامتر
+    const val Detail = "detail/{itemId}"
+
+    fun detailRoute(itemId: Int): String {
+        return "detail/$itemId"
     }
-
-    object Home : Destinations {
-        override val route = "Home"
-    }
-
-    object Profile : Destinations {
-        override val route = "Profile"
-    }
-
-    object Detail {
-        const val route = "detail/{itemId}"
-    }
-
-
 }

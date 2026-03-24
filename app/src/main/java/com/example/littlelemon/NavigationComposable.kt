@@ -5,9 +5,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.NavHost
-
+import androidx.navigation.navArgument
 
 @Composable
 fun MyNavigation(navController: NavHostController, database: AppDatabase) {
@@ -20,38 +21,46 @@ fun MyNavigation(navController: NavHostController, database: AppDatabase) {
     NavHost(
         navController = navController,
         startDestination = if (isLoggedIn)
-            Destinations.Home.route
+            Destinations.Home
         else
-            Destinations.Onboarding.route
+            Destinations.Onboarding
     ) {
 
-        composable(Destinations.Onboarding.route) {
+        composable(Destinations.Onboarding) {
             Onboarding(navController)
         }
 
-        composable(Destinations.Home.route) {
+        composable(Destinations.Home) {
             Home(navController, database, cartViewModel)
         }
 
-        composable(Destinations.Profile.route) {
+        composable(Destinations.Profile) {
             Profile(navController)
         }
 
-        composable("detail/{id}") { backStackEntry ->
-            val id = backStackEntry.arguments?.getString("id")?.toInt() ?: 0
+        composable(Destinations.Cart) {
+            CartScreen(navController, database, cartViewModel)
+        }
+
+        composable(Destinations.Track) {
+            TrackOrderScreen(navController, cartViewModel)
+        }
+
+        composable(
+            route = Destinations.Detail,
+            arguments = listOf(
+                navArgument("itemId") { type = NavType.IntType }
+            )
+        ) { backStackEntry ->
+
+            val id = backStackEntry.arguments?.getInt("itemId") ?: 0
 
             DetailScreen(
-                navController,
+                navController = navController,
                 id = id,
                 database = database,
                 cartViewModel = cartViewModel
             )
         }
-
-        composable("cart") {
-            CartScreen(navController,database, cartViewModel)
-        }
-
-
     }
 }
