@@ -6,11 +6,7 @@ object Destinations {
     const val Profile = "profile"
     const val Cart = "cart"
     const val Track = "track"
-
-    // با پارامتر
     const val Detail = "detail/{itemId}"
+    fun detailRoute(id: Int) = "detail/$id"
 
-    fun detailRoute(itemId: Int): String {
-        return "detail/$itemId"
-    }
 }

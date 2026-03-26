@@ -28,7 +28,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,6 +45,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Icon
+import androidx.compose.runtime.saveable.rememberSaveable
 import com.yalantis.ucrop.UCrop
 import java.io.File
 import java.io.FileOutputStream
@@ -56,10 +56,9 @@ fun Onboarding(navController: NavHostController) {
 
     val context = LocalContext.current
     val sharedPref = context.getSharedPreferences("LittleLemon", Context.MODE_PRIVATE)
-
     val savedPath = sharedPref.getString("profileImage", null)
 
-    var imageUri by remember {
+    var imageUri by rememberSaveable  {
         mutableStateOf(
             savedPath?.let { Uri.fromFile(File(it)) }
         )
@@ -71,9 +70,9 @@ fun Onboarding(navController: NavHostController) {
 
         if (result.resultCode == RESULT_OK) {
 
-            val resultUri = result.data?.let { UCrop.getOutput(it) }
+            val resultUri = result.data?.let { UCrop.getOutput(it) } ?: return@rememberLauncherForActivityResult
 
-            resultUri?.let {
+            resultUri.let {
                 val savedPath = saveImageToInternalStorage(context, it)
 
                 sharedPref.edit()
@@ -96,7 +95,7 @@ fun Onboarding(navController: NavHostController) {
             )
 
             val uCrop = UCrop.of(it, destinationUri)
-                .withAspectRatio(1f, 1f) // مربع
+                .withAspectRatio(1f, 1f)
                 .withMaxResultSize(500, 500)
 
             val intent = uCrop.getIntent(context)
@@ -106,10 +105,10 @@ fun Onboarding(navController: NavHostController) {
     }
 
 
-    var firstName by remember { mutableStateOf("") }
-    var lastName by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var message by remember { mutableStateOf("") }
+    var firstName by rememberSaveable { mutableStateOf("") }
+    var lastName by rememberSaveable  { mutableStateOf("") }
+    var email by rememberSaveable  { mutableStateOf("") }
+    var message by rememberSaveable  { mutableStateOf("") }
 
 
     LazyColumn(
@@ -204,7 +203,6 @@ fun Onboarding(navController: NavHostController) {
                                 }
                             }
 
-                            // 📷 آیکون دوربین (گوشه پایین راست)
                             Box(
                                 modifier = Modifier
                                     .align(Alignment.BottomEnd)
@@ -278,7 +276,11 @@ fun Onboarding(navController: NavHostController) {
                         onClick = {
                             if (firstName.isBlank() || lastName.isBlank() || email.isBlank()) {
                                 message = "Registration unsuccessful. Please enter all data."
-                            } else {
+                            }
+                            else if( !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()){
+                                message = "Please enter valid data."
+                            }
+                            else {
                                 sharedPref.edit()
                                     .putString("firstName", firstName)
                                     .putString("lastName", lastName)
@@ -289,6 +291,7 @@ fun Onboarding(navController: NavHostController) {
 
                                 navController.navigate(Destinations.Home) {
                                     popUpTo(Destinations.Onboarding) { inclusive = true }
+                                    launchSingleTop = true
                                 }
                             }
                         },
@@ -303,7 +306,14 @@ fun Onboarding(navController: NavHostController) {
                     ) {
                         Text("Register", color = Color.Black)
                     }
-                    Text(message)
+                    val isError = message.startsWith("Registration unsuccessful") || message.startsWith("Please")
+
+                    if (message.isNotEmpty()) {
+                        Text(
+                            message,
+                            color = if (isError) Color.Red else Color(0xFF4CAF50)
+                        )
+                    }
                 }
             }
         }
@@ -319,16 +329,14 @@ fun OnboardingPreview() {
 
 fun saveImageToInternalStorage(context: Context, uri: Uri): String {
 
-    val inputStream = context.contentResolver.openInputStream(uri)
     val fileName = "profile_${System.currentTimeMillis()}.jpg"
     val file = File(context.filesDir, fileName)
 
-    val outputStream = FileOutputStream(file)
-
-    inputStream?.copyTo(outputStream)
-
-    inputStream?.close()
-    outputStream.close()
+    context.contentResolver.openInputStream(uri)?.use { input ->
+        FileOutputStream(file).use { output ->
+            input.copyTo(output)
+        }
+    }
 
     return file.absolutePath
 }

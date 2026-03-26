@@ -25,6 +25,7 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
+            isShrinkResources = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -56,7 +57,6 @@ dependencies {
     implementation(platform("androidx.compose:compose-bom:2023.03.00"))
     implementation("com.github.bumptech.glide:compose:1.0.0-alpha.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
-
     implementation("androidx.navigation:navigation-compose:2.5.3")
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.1")

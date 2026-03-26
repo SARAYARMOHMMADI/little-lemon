@@ -38,8 +38,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import kotlinx.coroutines.delay
 import androidx.compose.animation.core.tween
-import com.google.android.gms.maps.model.CameraPosition
-import com.google.android.gms.maps.model.LatLng
 
 enum class OrderStatus {
     PREPARING,
@@ -95,7 +93,7 @@ fun TrackOrderScreen(
             )
             Spacer(modifier = Modifier.height(8.dp))
 
-            Text("Items: ${cartViewModel.cartItems.size}",
+            Text("Items: ${cartViewModel.getTotalCount()}",
                 color = Color.Gray)
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -108,7 +106,9 @@ fun TrackOrderScreen(
             Button(
                 onClick = {
                     cartViewModel.clearCart()
-                    navController.popBackStack(Destinations.Home, false)
+                    navController.navigate(Destinations.Home) {
+                        popUpTo(Destinations.Home) { inclusive = true }
+                    }
                 },
                 shape = RoundedCornerShape(50),
                 colors = ButtonDefaults.buttonColors(
@@ -131,7 +131,8 @@ fun TrackHeader(navController: NavController) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp)
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
     ) {
 
 

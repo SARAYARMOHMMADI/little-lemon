@@ -11,19 +11,31 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.navArgument
 
 @Composable
-fun MyNavigation(navController: NavHostController, database: AppDatabase) {
+fun MyNavigation(navController: NavHostController) {
 
     val context = LocalContext.current
+
+    // SharedPreferences
     val sharedPref = context.getSharedPreferences("LittleLemon", Context.MODE_PRIVATE)
     val isLoggedIn = sharedPref.getString("firstName", null) != null
-    val cartViewModel: CartViewModel = viewModel()
+
+    //  Database instance
+    val database = AppDatabase.getInstance(context)
+
+    //  ViewModel with Factory
+    val cartViewModel: CartViewModel = viewModel(
+        factory = CartViewModelFactory(database)
+    )
+
+    val startDestination = if (isLoggedIn) {
+        Destinations.Home
+    } else {
+        Destinations.Onboarding
+    }
 
     NavHost(
         navController = navController,
-        startDestination = if (isLoggedIn)
-            Destinations.Home
-        else
-            Destinations.Onboarding
+        startDestination = startDestination
     ) {
 
         composable(Destinations.Onboarding) {
@@ -31,7 +43,7 @@ fun MyNavigation(navController: NavHostController, database: AppDatabase) {
         }
 
         composable(Destinations.Home) {
-            Home(navController, database, cartViewModel)
+            Home(navController, cartViewModel)
         }
 
         composable(Destinations.Profile) {
@@ -39,7 +51,7 @@ fun MyNavigation(navController: NavHostController, database: AppDatabase) {
         }
 
         composable(Destinations.Cart) {
-            CartScreen(navController, database, cartViewModel)
+            CartScreen(navController, cartViewModel)
         }
 
         composable(Destinations.Track) {
@@ -53,12 +65,13 @@ fun MyNavigation(navController: NavHostController, database: AppDatabase) {
             )
         ) { backStackEntry ->
 
-            val id = backStackEntry.arguments?.getInt("itemId") ?: 0
+            val id = requireNotNull(
+                backStackEntry.arguments?.getInt("itemId")
+            )
 
             DetailScreen(
                 navController = navController,
                 id = id,
-                database = database,
                 cartViewModel = cartViewModel
             )
         }

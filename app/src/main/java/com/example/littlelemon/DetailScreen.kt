@@ -3,7 +3,6 @@ package com.example.littlelemon
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,7 +15,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -39,60 +37,64 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavController
-import androidx.lifecycle.viewmodel.compose.viewModel
 
 
 @Composable
-fun DetailScreen(navController: NavController, id: Int, database: AppDatabase,cartViewModel: CartViewModel) {
+fun DetailScreen(navController: NavController, id: Int, cartViewModel: CartViewModel)
+{
+    val itemLiveData = remember(id) {
+        cartViewModel.getItemById(id)
+    }
+    val item by itemLiveData.observeAsState(null)
 
-    val item by database.menuItemDao()
-        .getById(id)
-        .observeAsState(initial = null)
-
-    item?.let { menuItem ->
-
-        val imageUrl = menuItem.image
-            .replace("github.com", "raw.githubusercontent.com")
-            .replace("/blob/", "/")
-            .replace("?raw=true", "")
-
-
-        var selected by remember { mutableStateOf("") }
-        var count by remember { mutableStateOf(1) }
-
-        Box(modifier = Modifier.fillMaxSize()) {
-
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(bottom = 100.dp)
-            ) {
-                DetailHeader(navController, cartCount = cartViewModel.getTotalCount())
-                DetailImage(imageUrl)
-                DetailContent(menuItem = menuItem)
-            }
-
-            DetailBottomBar(
-                price = menuItem.price,
-                count = count,
-                onIncrease = { count++ },
-                onDecrease = { if (count > 1) count-- },
-                onAddToCart = {
-                    cartViewModel.addToCart(menuItem, count)
-                    count = 1
-                },
-                modifier = Modifier.align(Alignment.BottomCenter)
-            )
+    if (item == null) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
         }
+        return
+    }
+
+    val menuItem = item ?: return
+
+    val imageUrl = ImageUtils.formatImageUrl(menuItem.image)
+
+    var count by remember { mutableStateOf(1) }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = 100.dp)
+        ) {
+            DetailHeader(navController, cartCount = cartViewModel.getTotalCount())
+            DetailImage(imageUrl)
+            DetailContent(menuItem = menuItem)
+        }
+
+        DetailBottomBar(
+            price = menuItem.price,
+            count = count,
+            onIncrease = { count++ },
+            onDecrease = { if (count > 1) count-- },
+            onAddToCart = {
+                cartViewModel.addToCart(menuItem, count)
+                count = 1
+            },
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
     }
 }
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetailHeader(navController: NavController,  cartCount: Int) {
-
+fun DetailHeader(navController: NavController,  cartCount: Int)
+{
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -115,7 +117,7 @@ fun DetailHeader(navController: NavController,  cartCount: Int) {
         )
 
         IconButton(onClick = {
-            navController.navigate("cart")
+            navController.navigate(Destinations.Cart)
         }) {
             BadgedBox(
                 badge = {
@@ -225,7 +227,7 @@ fun DetailBottomBar(
             shape = RoundedCornerShape(16.dp),
             colors = buttonColors(containerColor = Color(0xFFF4CE14))
         ) {
-            val totalPrice = price.toDouble() * count
+            val totalPrice = (price.toDoubleOrNull() ?: 0.0) * count
             Text("Add for $${"%.2f".format(totalPrice)}", color = Color.Black)
         }
     }

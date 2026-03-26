@@ -2,67 +2,42 @@ package com.example.littlelemon
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Divider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
-import androidx.room.Database
 
 
 @Composable
-fun CartScreen(navController: NavController,database: AppDatabase, cartViewModel: CartViewModel) {
-
-    val menuItems by database
-        .menuItemDao()
-        .getAll()
-        .observeAsState(emptyList())
-
+fun CartScreen( navController: NavController, cartViewModel: CartViewModel)
+ {
+    val menuItems by cartViewModel.menuItems.observeAsState(emptyList())
     var showDialog by remember { mutableStateOf(false) }
 
     Column(
@@ -93,8 +68,6 @@ fun CartScreen(navController: NavController,database: AppDatabase, cartViewModel
         )
     }
 }
-
-
 @Composable
 fun CheckoutButton(cartViewModel: CartViewModel, onClick: () -> Unit) {
     val subtotal = cartViewModel.getSubtotal()
@@ -104,7 +77,7 @@ fun CheckoutButton(cartViewModel: CartViewModel, onClick: () -> Unit) {
     Button(
         onClick = onClick,
         enabled = cartViewModel.cartItems.isNotEmpty(),
-        shape = RoundedCornerShape(20), // 🔥 کاملاً گرد
+        shape = RoundedCornerShape(20),
         colors = ButtonDefaults.buttonColors(
             containerColor = Color(0xFFF4CE14),
             contentColor = Color.Black
@@ -115,7 +88,7 @@ fun CheckoutButton(cartViewModel: CartViewModel, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 12.dp)
-            .height(40.dp) // 🔥 ارتفاع استاندارد
+            .height(40.dp)
     ) {
 
         Text(
@@ -125,7 +98,6 @@ fun CheckoutButton(cartViewModel: CartViewModel, onClick: () -> Unit) {
         )
     }
 }
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CartHeader(navController: NavController,  cartCount: Int) {
@@ -200,7 +172,7 @@ fun Cutlery(cartViewModel: CartViewModel) {
 
             Checkbox(
                 checked = cartViewModel.isCutlerySelected,
-                onCheckedChange = { cartViewModel.isCutlerySelected = it },
+                onCheckedChange = { cartViewModel.toggleCutlery(it) },
                 colors = CheckboxDefaults.colors(
                     checkedColor = Color(0xFF495E57)
                 )
@@ -237,10 +209,7 @@ fun CartItemsList(cartViewModel: CartViewModel) {
         //  Items List
         cartViewModel.cartItems.forEach { cartItem ->
 
-            val imageUrl = cartItem.item.image
-                .replace("github.com", "raw.githubusercontent.com")
-                .replace("/blob/", "/")
-                .replace("?raw=true", "")
+            val imageUrl = ImageUtils.formatImageUrl(cartItem.item.image)
 
             val price = cartItem.item.price.toDoubleOrNull() ?: 0.0
 
@@ -283,7 +252,7 @@ fun CartItemsList(cartViewModel: CartViewModel) {
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        val totalPrice = price * cartItem.quantity.value
+                        val totalPrice = price * cartItem.quantity
                         // Price
                         Text(
                             text = "$%.2f".format(totalPrice),
@@ -298,13 +267,13 @@ fun CartItemsList(cartViewModel: CartViewModel) {
                             IconButton(
                                 modifier = Modifier.size(32.dp),
                                 onClick = { cartViewModel.decrease(cartItem) },
-                                enabled = cartItem.quantity.value > 1
+                                enabled = cartItem.quantity > 1
                             ) {
                                 Text("-")
                             }
 
                             Text(
-                                text = cartItem.quantity.value.toString(),
+                                text = cartItem.quantity.toString(),
                                 modifier = Modifier.padding(horizontal = 6.dp)
                             )
 
@@ -374,10 +343,7 @@ fun MoreOrderSection(menuItems: List<MenuItemRoom>, cartViewModel: CartViewModel
 @Composable
 fun MoreOrderItem(menuItem: MenuItemRoom, cartViewModel: CartViewModel) {
 
-    val imageUrl = menuItem.image
-        .replace("github.com", "raw.githubusercontent.com")
-        .replace("/blob/", "/")
-        .replace("?raw=true", "")
+    val imageUrl = ImageUtils.formatImageUrl(menuItem.image)
 
     Column(
         modifier = Modifier
@@ -517,7 +483,6 @@ fun RowPrice(label: String, value: Double) {
         )
     }
 }
-
 @Composable
 fun OrderSuccessDialog(navController: NavController, cartViewModel: CartViewModel, onDismiss: () -> Unit) {
 

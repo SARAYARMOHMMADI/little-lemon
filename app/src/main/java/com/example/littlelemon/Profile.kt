@@ -1,6 +1,8 @@
 package com.example.littlelemon
 
+import ProfileViewModelFactory
 import android.app.Activity
+import android.app.Application
 import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -27,8 +29,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,11 +44,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.yalantis.ucrop.UCrop
 import java.io.File
-import androidx.compose.runtime.setValue
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import coil.compose.AsyncImage
@@ -58,15 +56,17 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.material.ripple.rememberRipple
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Profile (navController: NavHostController) {
-
-
+fun Profile (navController: NavHostController)
+{
     val context = LocalContext.current
-    val viewModel = remember { ProfileViewModel(context) }
+    val viewModel: ProfileViewModel = viewModel(
+        factory = ProfileViewModelFactory(context.applicationContext as Application)
+    )
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val scale = remember { Animatable(1f) }
@@ -149,6 +149,8 @@ fun Profile (navController: NavHostController) {
                             AsyncImage(
                                 model = ImageRequest.Builder(context)
                                     .data(viewModel.imageUri ?: R.drawable.profile)
+                                    .error(R.drawable.profile)
+                                    .placeholder(R.drawable.profile)
                                     .crossfade(false)
                                     .build(),
                                 contentDescription = "Profile",
@@ -223,7 +225,7 @@ fun Profile (navController: NavHostController) {
                     }
                     item{
                         OutlinedTextField(
-                            value = viewModel.email ?: "",
+                            value = viewModel.email,
                             onValueChange = {},
                             label = { Text("Email") },
                             enabled = false,
@@ -239,7 +241,7 @@ fun Profile (navController: NavHostController) {
                                 if (viewModel.firstName.isNotBlank() && viewModel.lastName.isNotBlank()) {
                                     viewModel.saveProfile()
                                     scope.launch {
-                                        snackbarHostState.showSnackbar("Profile saved")
+                                        snackbarHostState.showSnackbar("Profile updated successfully")
                                     }
                                 } else {
                                     scope.launch {
@@ -265,7 +267,7 @@ fun Profile (navController: NavHostController) {
                             onClick = {
                                 viewModel.clearProfile()
                                 navController.navigate(Destinations.Onboarding) {
-                                    popUpTo(Destinations.Home) { inclusive = true }
+                                    popUpTo(0)
                                 }
                             },
                             modifier = Modifier

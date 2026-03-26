@@ -22,12 +22,12 @@ class MainActivity : ComponentActivity() {
 
     private val httpClient = HttpClient(Android) {
         install(ContentNegotiation) {
-            json(contentType = ContentType("text", "plain"))
+            json(contentType = ContentType.Any)
         }
     }
 
     private val database by lazy {
-        Room.databaseBuilder(applicationContext, AppDatabase::class.java, "database").fallbackToDestructiveMigration().build()
+        AppDatabase.getInstance(applicationContext)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,7 +35,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val navController = rememberNavController()
-            MyNavigation(navController, database)
+            MyNavigation(navController)
         }
         lifecycleScope.launch(Dispatchers.IO) {
             if (database.menuItemDao().isEmpty()) {

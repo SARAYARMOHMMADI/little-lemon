@@ -6,6 +6,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,17 +32,19 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 
-
 @Composable
-fun Home(navController: NavHostController, database: AppDatabase,  cartViewModel: CartViewModel) {
-
-    val databaseMenuItems by database
-        .menuItemDao()
-        .getAll()
-        .observeAsState(emptyList())
-
-    val menuItems =  databaseMenuItems
-
+fun Home(navController: NavHostController,  cartViewModel: CartViewModel)
+{
+    val menuItems by cartViewModel.menuItems.observeAsState(emptyList())
+    if (menuItems.isEmpty()) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        return
+    }
     var searchPhrase by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("") }
 
@@ -58,7 +62,7 @@ fun Home(navController: NavHostController, database: AppDatabase,  cartViewModel
     }
     val categoryFiltered = if (selectedCategory.isNotBlank()) {
         filteredItems.filter {
-            it.category == selectedCategory
+            it.category.equals(selectedCategory, ignoreCase = true)
         }
     } else {
         filteredItems
@@ -69,25 +73,16 @@ fun Home(navController: NavHostController, database: AppDatabase,  cartViewModel
             Header(navController, cartViewModel, uri)
         }
         item {
-            HeroSection(
-                searchPhrase = searchPhrase,
-                onSearchChanged = { searchPhrase = it }
-            )
+            HeroSection(searchPhrase) { searchPhrase = it }
         }
         item {
-            CategorySection(
-                selectedCategory = selectedCategory,
-                onCategorySelected = { selectedCategory = it }
-            )
+            CategorySection(selectedCategory) { selectedCategory = it }
         }
-        items(categoryFiltered) { item ->
-
-            MenuItem(item, navController)
-
+        items(categoryFiltered, key = { it.id }) {
+            MenuItem(it, navController)
         }
     }
 }
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Header(navController: NavHostController, cartViewModel: CartViewModel, profileUri: Uri?)
@@ -139,7 +134,7 @@ fun Header(navController: NavHostController, cartViewModel: CartViewModel, profi
 
         IconButton(
             onClick = {
-                navController.navigate("cart")
+                navController.navigate(Destinations.Cart)
             }
         ) {
             BadgedBox(
@@ -160,7 +155,6 @@ fun Header(navController: NavHostController, cartViewModel: CartViewModel, profi
         }
     }
 }
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HeroSection(searchPhrase: String, onSearchChanged: (String) -> Unit)
@@ -191,7 +185,7 @@ fun HeroSection(searchPhrase: String, onSearchChanged: (String) -> Unit)
             ) {
 
                 Text(
-                    text = "Chicago",
+                    text = "California",
                     fontSize = 20.sp,
                     color = Color.White
                 )
@@ -238,9 +232,7 @@ fun HeroSection(searchPhrase: String, onSearchChanged: (String) -> Unit)
         )
     }
 }
-
 @Composable
-
 fun CategorySection(selectedCategory: String, onCategorySelected: (String) -> Unit)
 {
     Column(
@@ -248,7 +240,6 @@ fun CategorySection(selectedCategory: String, onCategorySelected: (String) -> Un
             .fillMaxWidth()
             .padding(16.dp)
     ) {
-
         Text(
             text = "ORDER FOR DELIVERY!",
             fontWeight = FontWeight.Bold,
@@ -319,27 +310,26 @@ fun CategoryButton(text: String, isSelected: Boolean, onClick: () -> Unit) {
 
         )
     ) {
-
         Text(
             text = text,
             fontWeight = FontWeight.Bold
         )
     }
 }
-
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
-fun MenuItem(menuItem: MenuItemRoom, navController: NavController) {
-
+fun MenuItem(menuItem: MenuItemRoom, navController: NavController)
+{
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable {
-                navController.navigate("detail/${menuItem.id}")
+                navController.navigate(Destinations.detailRoute(menuItem.id)) {
+                    launchSingleTop = true
+                }
             }
             .padding(16.dp)
     ){
-
         Column(
             modifier = Modifier.weight(1f)
         ) {
@@ -360,10 +350,7 @@ fun MenuItem(menuItem: MenuItemRoom, navController: NavController) {
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        val imageUrl = menuItem.image
-            .replace("github.com", "raw.githubusercontent.com")
-            .replace("/blob/", "/")
-            .replace("?raw=true", "")
+        val imageUrl = ImageUtils.formatImageUrl(menuItem.image)
 
         GlideImage(
             model = imageUrl,

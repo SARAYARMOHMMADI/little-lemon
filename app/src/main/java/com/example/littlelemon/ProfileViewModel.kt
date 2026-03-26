@@ -1,17 +1,18 @@
 package com.example.littlelemon
 
+import android.app.Application
 import android.content.Context
 import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 
-class ProfileViewModel(context: Context) : ViewModel() {
+class ProfileViewModel(application: Application) : AndroidViewModel(application){
 
     private val sharedPref =
-        context.getSharedPreferences("LittleLemon", Context.MODE_PRIVATE)
-
+        getApplication<Application>()
+            .getSharedPreferences("LittleLemon", Context.MODE_PRIVATE)
 
     var firstName by mutableStateOf("")
         private set
@@ -30,9 +31,9 @@ class ProfileViewModel(context: Context) : ViewModel() {
     }
 
     private fun loadData() {
-        firstName = sharedPref.getString("firstName", "") ?: ""
-        lastName = sharedPref.getString("lastName", "") ?: ""
-        email = sharedPref.getString("email", "") ?: ""
+        firstName = sharedPref.getString("firstName", "").orEmpty()
+        lastName =  sharedPref.getString("lastName", "").orEmpty()
+        email = sharedPref.getString("email", "").orEmpty()
 
         val uriString = sharedPref.getString("profileImage", null)
         imageUri = uriString?.let { Uri.parse(it) }
